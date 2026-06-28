@@ -1,3 +1,8 @@
+# Keystore — never commit these
+android/key.properties
+android/*.jks
+android/*.keystore
+
 # Miscellaneous
 *.class
 *.log
