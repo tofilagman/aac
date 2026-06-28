@@ -2,7 +2,7 @@ name: aac_app
 description: "AAC app for children with autism"
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.11.5
