@@ -7,6 +7,7 @@ import '../widgets/symbol_button.dart';
 import '../widgets/folder_button.dart';
 import 'edit_screen.dart';
 import 'voice_picker_screen.dart';
+import 'privacy_policy_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -54,6 +55,30 @@ class HomeScreen extends StatelessWidget {
                 );
               }
             },
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'privacy') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const PrivacyPolicyScreen()),
+                );
+              }
+            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(
+                value: 'privacy',
+                child: Row(
+                  children: [
+                    Icon(Icons.privacy_tip_outlined, color: Colors.indigo),
+                    SizedBox(width: 10),
+                    Text('Privacy Policy'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
