@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/symbol_item.dart';
 import '../models/folder.dart';
+import '../services/phrase_expander.dart';
 
 const _uuid = Uuid();
 
@@ -51,6 +52,9 @@ class AacProvider extends ChangeNotifier {
   }
 
   String get sentenceText => _sentence.map((s) => s.label).join(' ');
+
+  String get expandedSentenceText =>
+      PhraseExpander.expand(_sentence.map((s) => s.label).toList());
 
   void enterFolder(String folderId) {
     _currentFolderId = folderId;

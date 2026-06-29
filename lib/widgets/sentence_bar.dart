@@ -28,55 +28,7 @@ class BottomActionBar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Sentence display
-            Container(
-              color: Colors.indigo.shade50,
-              constraints: const BoxConstraints(minHeight: 44),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              width: double.infinity,
-              child: sentence.isEmpty
-                  ? const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Tap symbols to build a sentence...',
-                        style: TextStyle(color: Colors.grey, fontSize: 14),
-                      ),
-                    )
-                  : SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: sentence.asMap().entries.map((entry) {
-                          final i = entry.key;
-                          final item = entry.value;
-                          return GestureDetector(
-                            onTap: () => provider.removeFromSentence(i),
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 3),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: Colors.indigo,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (item.emoji != null)
-                                    Text(item.emoji!,
-                                        style: const TextStyle(fontSize: 14)),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    item.label,
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-            ),
+            _SentenceDisplay(provider: provider, sentence: sentence),
             // Action buttons row
             Row(
               children: [
@@ -99,7 +51,7 @@ class BottomActionBar extends StatelessWidget {
                     color: Colors.indigo,
                     onTap: sentence.isEmpty
                         ? null
-                        : () => TtsService.instance.speak(provider.sentenceText),
+                        : () => TtsService.instance.speak(provider.expandedSentenceText),
                   ),
                 ),
                 // Clear button
@@ -115,6 +67,103 @@ class BottomActionBar extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Shared sentence display (portrait = horizontal chips, landscape = wrap) ────
+
+class _SentenceDisplay extends StatelessWidget {
+  final AacProvider provider;
+  final List sentence;
+  final bool vertical;
+
+  const _SentenceDisplay({
+    required this.provider,
+    required this.sentence,
+    this.vertical = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final expanded = provider.expandedSentenceText;
+    final raw = provider.sentenceText;
+    final showPreview = sentence.isNotEmpty && expanded != raw;
+
+    Widget chips;
+    if (sentence.isEmpty) {
+      chips = Align(
+        alignment: vertical ? Alignment.topCenter : Alignment.centerLeft,
+        child: Text(
+          'Tap symbols to build a sentence...',
+          style: TextStyle(color: Colors.grey, fontSize: vertical ? 12 : 14),
+          textAlign: vertical ? TextAlign.center : TextAlign.left,
+        ),
+      );
+    } else {
+      final chipWidgets = sentence.asMap().entries.map((entry) {
+        final i = entry.key;
+        final item = entry.value;
+        return GestureDetector(
+          onTap: () => provider.removeFromSentence(i),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: Colors.indigo,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (item.emoji != null)
+                  Text(item.emoji!,
+                      style: TextStyle(fontSize: vertical ? 16 : 14)),
+                const SizedBox(width: 4),
+                Text(
+                  item.label,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList();
+
+      chips = vertical
+          ? SingleChildScrollView(
+              child: Wrap(spacing: 0, runSpacing: 0, children: chipWidgets))
+          : SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(children: chipWidgets));
+    }
+
+    return Container(
+      color: Colors.indigo.shade50,
+      constraints: vertical ? null : const BoxConstraints(minHeight: 44),
+      padding: EdgeInsets.symmetric(
+          horizontal: vertical ? 8 : 12, vertical: vertical ? 8 : 6),
+      width: double.infinity,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          chips,
+          if (showPreview)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                expanded,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.indigo.shade400,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -191,54 +240,8 @@ class SideActionBar extends StatelessWidget {
           children: [
             // Sentence tokens in a scrollable wrap
             Expanded(
-              child: Container(
-                color: Colors.indigo.shade50,
-                width: double.infinity,
-                padding: const EdgeInsets.all(8),
-                child: sentence.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'Tap symbols to build a sentence...',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
-                          textAlign: TextAlign.center,
-                        ),
-                      )
-                    : SingleChildScrollView(
-                        child: Wrap(
-                          spacing: 4,
-                          runSpacing: 4,
-                          children: sentence.asMap().entries.map((entry) {
-                            final i = entry.key;
-                            final item = entry.value;
-                            return GestureDetector(
-                              onTap: () => provider.removeFromSentence(i),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.indigo,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (item.emoji != null)
-                                      Text(item.emoji!,
-                                          style:
-                                              const TextStyle(fontSize: 20)),
-                                    Text(
-                                      item.label,
-                                      style: const TextStyle(
-                                          color: Colors.white, fontSize: 11),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-              ),
+              child: _SentenceDisplay(
+                  provider: provider, sentence: sentence, vertical: true),
             ),
             // Action buttons stacked vertically
             if (inFolder)
@@ -254,7 +257,7 @@ class SideActionBar extends StatelessWidget {
               color: Colors.indigo,
               onTap: sentence.isEmpty
                   ? null
-                  : () => TtsService.instance.speak(provider.sentenceText),
+                  : () => TtsService.instance.speak(provider.expandedSentenceText),
             ),
             _SideButton(
               icon: Icons.backspace_rounded,
