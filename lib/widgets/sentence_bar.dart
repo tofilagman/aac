@@ -163,3 +163,153 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
+
+// ── Landscape right sidebar ───────────────────────────────────────────────────
+
+class SideActionBar extends StatelessWidget {
+  const SideActionBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<AacProvider>();
+    final sentence = provider.sentence;
+    final inFolder = provider.currentFolderId != null;
+
+    return SafeArea(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(25),
+              blurRadius: 8,
+              offset: const Offset(-2, 0),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Sentence tokens in a scrollable wrap
+            Expanded(
+              child: Container(
+                color: Colors.indigo.shade50,
+                width: double.infinity,
+                padding: const EdgeInsets.all(8),
+                child: sentence.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'Tap symbols to build a sentence...',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        child: Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: sentence.asMap().entries.map((entry) {
+                            final i = entry.key;
+                            final item = entry.value;
+                            return GestureDetector(
+                              onTap: () => provider.removeFromSentence(i),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.indigo,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (item.emoji != null)
+                                      Text(item.emoji!,
+                                          style:
+                                              const TextStyle(fontSize: 20)),
+                                    Text(
+                                      item.label,
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 11),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+              ),
+            ),
+            // Action buttons stacked vertically
+            if (inFolder)
+              _SideButton(
+                icon: Icons.arrow_back_rounded,
+                label: 'Back',
+                color: Colors.orange,
+                onTap: provider.exitFolder,
+              ),
+            _SideButton(
+              icon: Icons.volume_up_rounded,
+              label: 'Speak',
+              color: Colors.indigo,
+              onTap: sentence.isEmpty
+                  ? null
+                  : () => TtsService.instance.speak(provider.sentenceText),
+            ),
+            _SideButton(
+              icon: Icons.backspace_rounded,
+              label: 'Clear',
+              color: Colors.red,
+              onTap: sentence.isEmpty ? null : provider.clearSentence,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SideButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _SideButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final disabled = onTap == null;
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                color: disabled ? Colors.grey.shade300 : color, size: 26),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: disabled ? Colors.grey.shade300 : color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
